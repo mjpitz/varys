@@ -1,0 +1,28 @@
+project_name: varys
+
+snapshot:
+  name_template: "{{ .ShortCommit }}"
+
+builds:
+  - id: varys
+    main: ./cmd/varys/main.go
+    binary: varys
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - id: varys
+    name_template: "varys_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: 'varys_checksums.txt'
+
+release:
+  header: ""
+  footer: ""

@@ -118,7 +118,7 @@ type Service struct {
 
 **Environment Variables:**
 
-- `VARYS_SECRETS_ROOT_KEY`
+- `VARYS_CREDENTIAL_ROOT_KEY`
 
 ### Endpoints
 
