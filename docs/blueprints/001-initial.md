@@ -13,10 +13,35 @@ decent amount out before diving in. But in this case, I'm going to stop and inte
 
 This will start as an HTTP service. Later discussions can be had about adding other interfaces.
 
+Since the default configuration is insecure by default, the process binds to localhost to avoid any unknowing security
+leaks. When deploying on anything other than localhost, a more secure configuration should be used.
+
 ### Authentication
 
-All requests to the system should be authenticated. Authentication will be handled by OpenID Connect which extends OAuth
-2.0 to support user authentication. For local development, I will likely build against something like DexIDP.
+All requests to the system should be authenticated. Authentication will be handled by basic auth for the time being as
+we expect all communication with the system to be encrypted. Basic auth can be performed using a username and password
+combination or using a bearer token file.
+
+If no file is specified (not recommended) then default credentials will be used (username: `badadmin`, password: 
+`badadmin`).
+
+**Username / Password File:**
+
+```csv
+"password","username","userID","group1,group2"
+```
+
+**Bearer Token File:**
+
+```csv
+"username","token","userID","group1"
+```
+
+**Environment Variables:**
+
+- `VARYS_AUTH_TYPE` - specifies which auth type should be used (options: `basic`)
+- `VARYS_BASIC_PASSWORD_FILE` - path to the csv file containing usernames and passwords
+- `VARYS_BASIC_TOKEN_FILE` - path to the csv file containing tokens
 
 ### Authorization
 
