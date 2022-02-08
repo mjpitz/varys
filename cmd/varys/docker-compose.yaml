@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  varys:
+    container_name: varys
+    image: ${SKAFFOLD_DEFAULT_REPO:-ghcr.io/mjpitz}/varys
+    restart: always
+    ports:
+      - 3456:3456
+    command:
+      - run
