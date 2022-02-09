@@ -19,6 +19,14 @@ to the service in order to obtain them.
 [license-img]: https://img.shields.io/github/license/mjpitz/varys?label=License&style=flat-square
 [license-link]: LICENSE
 
+### Features
+
+- [x] Authentication (basic)
+- [ ] Authorization (casbin)
+- [x] Encryption in transit
+- [x] Encryption at rest
+- [x] Endpoints (most)
+
 ## Getting Started
 
 For now, you'll need to install `varys` the old-fashion way.
