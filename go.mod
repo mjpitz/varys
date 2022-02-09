@@ -2,8 +2,6 @@ module github.com/mjpitz/varys
 
 go 1.17
 
-replace github.com/mjpitz/myago => ../myago
-
 require (
 	github.com/mjpitz/myago v0.0.0-20220202195235-c19834b74b31
 	github.com/urfave/cli/v2 v2.3.0
@@ -13,21 +11,16 @@ require (
 	github.com/casbin/casbin/v2 v2.41.0
 	github.com/dgraph-io/badger/v3 v3.2103.2
 	github.com/gorilla/mux v1.8.0
-	github.com/inits/badgerholdv2 v0.0.0-20200520095412-32d8593ae622
-	github.com/inits/casbin-badgerdb-adapter v0.0.0-20200621131611-65f8e305d0a9
 	go.uber.org/zap v1.19.1
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 )
 
 require (
-	github.com/DataDog/zstd v1.4.1 // indirect
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
-	github.com/dgraph-io/badger/v2 v2.0.3 // indirect
 	github.com/dgraph-io/ristretto v0.1.0 // indirect
-	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
