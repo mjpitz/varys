@@ -19,8 +19,6 @@ to the service in order to obtain them.
 [license-img]: https://img.shields.io/github/license/mjpitz/varys?label=License&style=flat-square
 [license-link]: LICENSE
 
-
-
 ## Getting Started
 
 For now, you'll need to install `varys` the old-fashion way.
@@ -54,6 +52,8 @@ OPTIONS:
 
 ```
 
+### Default, insecure configuration
+
 By default, `varys` runs in a semi-insecure mode.
 
 - We `sha256` the provided encryption key to ensure a proper length. So even if an encryption key isn't provided, we 
@@ -61,6 +61,8 @@ By default, `varys` runs in a semi-insecure mode.
 - If no auth type is set, then a set of default credentials are used (username: `badadmin`, password: `badadmin`).
 - Communication with the service is insecure by default. As a result, we bind the service to localhost to avoid any 
   unintended exposure. Its highly recommended that TLS is enabled before exposing the service beyond localhost.
+
+### Secure configuration
 
 It's highly recommended that `varys` is not run using the default configuration.
 
