@@ -37,7 +37,8 @@ func (api *API) CreateService(w http.ResponseWriter, r *http.Request) {
 		Templates: req.Templates,
 	}
 
-	if service.Kind == "" || service.Name == "" {
+	if service.Kind == "" || service.Name == "" || service.Address == "" ||
+		service.Templates.UserTemplate == "" || service.Templates.PasswordTemplate == "" {
 		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
@@ -82,6 +83,11 @@ func (api *API) GetService(w http.ResponseWriter, r *http.Request) {
 		Name: vars["name"],
 	}
 
+	if service.Kind == "" || service.Name == "" {
+		http.Error(w, "", http.StatusBadRequest)
+		return
+	}
+
 	err := api.services.Get(r.Context(), service.Kind, service.Name, service)
 	switch {
 	case errors.Is(err, badger.ErrKeyNotFound):
@@ -109,11 +115,14 @@ func (api *API) UpdateService(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	query := r.URL.Query()
 
-	rotateKey, _ := strconv.ParseBool(query.Get("rotate_key"))
-
 	service := &Service{
 		Kind: vars["kind"],
 		Name: vars["name"],
+	}
+
+	if service.Kind == "" || service.Name == "" {
+		http.Error(w, "", http.StatusBadRequest)
+		return
 	}
 
 	txn := &Txn{api.db.NewTransaction(true)}
@@ -131,6 +140,7 @@ func (api *API) UpdateService(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	rotateKey, _ := strconv.ParseBool(query.Get("rotate_key"))
 	if rotateKey {
 		if _, err = rand.Read(service.Key); err != nil {
 			http.Error(w, "", http.StatusInternalServerError)
@@ -163,6 +173,11 @@ func (api *API) DeleteService(w http.ResponseWriter, r *http.Request) {
 	service := &Service{
 		Kind: vars["kind"],
 		Name: vars["name"],
+	}
+
+	if service.Kind == "" || service.Name == "" {
+		http.Error(w, "", http.StatusBadRequest)
+		return
 	}
 
 	err := api.services.Delete(r.Context(), service.Kind, service.Name)

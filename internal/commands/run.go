@@ -142,7 +142,8 @@ var (
 			router.SkipClean(true)
 			router.Use(mux.CORSMethodMiddleware(router))
 
-			api := engine.NewAPI(db, runConfig.Credential.RootKey)
+			// enforcer currently null due to compatibility issues with casbin adapters
+			api := engine.NewAPI(db, nil, runConfig.Credential.RootKey)
 
 			apiRouter := router.PathPrefix("/api/").Subrouter()
 			apiRouter.Use(func(handler http.Handler) http.Handler {
