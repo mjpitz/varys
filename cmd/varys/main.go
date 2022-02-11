@@ -54,6 +54,8 @@ func main() {
 		Flags:     flagset.ExtractPrefix("varys", cfg),
 		Commands: []*cli.Command{
 			commands.Run,
+			commands.Services,
+			commands.Users,
 			commands.Version,
 		},
 		Before: func(ctx *cli.Context) error {

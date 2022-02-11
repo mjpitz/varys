@@ -1,0 +1,43 @@
+##########
+## First, we generate additional policy for the API that will allow us to manage access for the specific service.
+##########
+
+p, system:{{ .Service.Kind }}:{{ .Service.Name }},                /api/v1/credentials/{{ .Service.Kind }}/{{ .Service.Name }},     GET
+p, admin:varys:services:{{ .Service.Kind }}:{{ .Service.Name }},  /api/v1/services/{{ .Service.Kind }}/{{ .Service.Name }}/grants, (GET)|(PUT)|(DELETE)
+p, update:varys:services:{{ .Service.Kind }}:{{ .Service.Name }}, /api/v1/services/{{ .Service.Kind }}/{{ .Service.Name }},        PUT
+p, delete:varys:services:{{ .Service.Kind }}:{{ .Service.Name }}, /api/v1/services/{{ .Service.Kind }}/{{ .Service.Name }},        DELETE
+
+##########
+## Next, we generate policy that's used to enable communication with the specific service. The object routes should not
+## exist on the API service, but provide a common pattern for defining permissions.
+##########
+
+p, read:{{ .Service.Kind }}:{{ .Service.Name }},   {{ .Service.K }}, read
+p, write:{{ .Service.Kind }}:{{ .Service.Name }},  {{ .Service.K }}, write
+p, update:{{ .Service.Kind }}:{{ .Service.Name }}, {{ .Service.K }}, update
+p, delete:{{ .Service.Kind }}:{{ .Service.Name }}, {{ .Service.K }}, delete
+p, admin:{{ .Service.Kind }}:{{ .Service.Name }},  {{ .Service.K }}, admin
+
+##########
+## Then, assign the newly generated policies to existing, higher level groups for the service kind.
+##########
+
+g, system:{{ .Service.Kind }},                system:{{ .Service.Kind }}:{{ .Service.Name }}
+g, admin:varys:services:{{ .Service.Kind }},  admin:varys:services:{{ .Service.Kind }}:{{ .Service.Name }}
+g, admin:varys:services:{{ .Service.Kind }},  admin:varys:services:{{ .Service.Kind }}:{{ .Service.Name }}
+g, update:varys:services:{{ .Service.Kind }}, update:varys:services:{{ .Service.Kind }}:{{ .Service.Name }}
+g, delete:varys:services:{{ .Service.Kind }}, delete:varys:services:{{ .Service.Kind }}:{{ .Service.Name }}
+g, read:{{ .Service.Kind }},                  read:{{ .Service.Kind }}:{{ .Service.Name }}
+g, write:{{ .Service.Kind }},                 write:{{ .Service.Kind }}:{{ .Service.Name }}
+g, update:{{ .Service.Kind }},                update:{{ .Service.Kind }}:{{ .Service.Name }}
+g, delete:{{ .Service.Kind }},                delete:{{ .Service.Kind }}:{{ .Service.Name }}
+g, admin:{{ .Service.Kind }},                 admin:{{ .Service.Kind }}:{{ .Service.Name }}
+
+##########
+## Finally, we assign the creator of the service permissions to update, delete, and administer the service they just
+## created within the system.
+##########
+
+g, {{ .Creator.K }}, admin:varys:services:{{ .Service.Kind }}:{{ .Service.Name }}
+g, {{ .Creator.K }}, update:varys:services:{{ .Service.Kind }}:{{ .Service.Name }}
+g, {{ .Creator.K }}, delete:varys:services:{{ .Service.Kind }}:{{ .Service.Name }}

@@ -22,7 +22,7 @@ to the service in order to obtain them.
 ### Features
 
 - [x] Authentication (basic)
-- [ ] Authorization (casbin)
+- [x] Authorization (casbin)
 - [x] Encryption in transit
 - [x] Encryption at rest
 - [x] Endpoints (most)
@@ -65,7 +65,7 @@ OPTIONS:
 By default, `varys` runs in a semi-insecure mode.
 
 - We `sha256` the provided encryption key to ensure a proper length. So even if an encryption key isn't provided, we 
-  still end up using a non-empty encryption key.
+  still end up using a non-empty encryption key when writing data to disk.
 - If no auth type is set, then a set of default credentials are used (username: `badadmin`, password: `badadmin`).
 - Communication with the service is insecure by default. As a result, we bind the service to localhost to avoid any 
   unintended exposure. Its highly recommended that TLS is enabled before exposing the service beyond localhost.

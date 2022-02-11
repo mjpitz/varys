@@ -17,8 +17,10 @@
 package commands
 
 import (
+	"io"
 	"text/template"
 
+	"github.com/olekukonko/tablewriter"
 	"github.com/urfave/cli/v2"
 )
 
@@ -26,7 +28,7 @@ const versionTemplate = "{{ .Name }} {{ .Version }} {{ range $key, $value := .Me
 
 var Version = &cli.Command{
 	Name:      "version",
-	Usage:     "Print the binary version information",
+	Usage:     "Print the binary version information.",
 	UsageText: "varys version",
 	Action: func(ctx *cli.Context) error {
 		return template.
@@ -34,4 +36,22 @@ var Version = &cli.Command{
 			Execute(ctx.App.Writer, ctx.App)
 	},
 	HideHelpCommand: true,
+}
+
+func newTable(out io.Writer) *tablewriter.Table {
+	table := tablewriter.NewWriter(out)
+
+	table.SetAutoWrapText(false)
+	table.SetAutoFormatHeaders(true)
+	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+	table.SetAlignment(tablewriter.ALIGN_LEFT)
+	table.SetCenterSeparator("")
+	table.SetColumnSeparator("")
+	table.SetRowSeparator("")
+	table.SetHeaderLine(false)
+	table.SetBorder(false)
+	table.SetTablePadding("\t") // pad with tabs
+	table.SetNoWhiteSpace(true)
+
+	return table
 }

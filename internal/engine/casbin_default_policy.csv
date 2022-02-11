@@ -1,0 +1,31 @@
+##########
+### REST Routes
+##########
+
+p, read:varys:users, /api/v1/users/self, GET
+p, read:varys:users, /api/v1/users,      GET
+
+p, read:varys:services,   /api/v1/services,               GET
+p, read:varys:services,   /api/v1/services/{kind}/{name}, GET
+p, write:varys:services,  /api/v1/services,               POST
+p, update:varys:services, /api/v1/services/{kind}/{name}, PUT
+p, delete:varys:services, /api/v1/services/{kind}/{name}, DELETE
+
+p, read:varys:credentials, /api/v1/services/{kind}/{name}/credentials, GET
+
+g, read:varys, read:varys:users
+g, read:varys, read:varys:services
+g, read:varys, read:varys:credentials
+
+g, write:varys, write:varys:services
+
+g, admin:varys, read:varys
+g, admin:varys, write:varys
+g, admin:varys, update:varys:services
+g, admin:varys, delete:varys:services
+
+##########
+### Default Credentials
+##########
+
+g, /_user/basic/ZSWSMYDOHR4MSZLGZTIEP2ZJXDQAGTRH5VFLQD5BHILXL5QANILQ, admin:varys

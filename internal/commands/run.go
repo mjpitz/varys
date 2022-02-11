@@ -25,6 +25,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/casbin/casbin/v2"
+	"github.com/casbin/casbin/v2/model"
 	"github.com/dgraph-io/badger/v3"
 	"github.com/gorilla/mux"
 	"github.com/urfave/cli/v2"
@@ -66,37 +68,22 @@ type RunConfig struct {
 	Basic basicauth.Config `json:"basic"`
 }
 
-type admin struct {
-	log *zap.Logger
-}
-
-func (a *admin) Lookup(req basicauth.LookupRequest) (resp basicauth.LookupResponse, err error) {
-	if req.User != "badadmin" {
-		err = auth.ErrUnauthorized
-	} else if len(req.Token) > 0 {
-		err = basicauth.ErrBadRequest
-	}
-
-	if err == nil {
-		resp = basicauth.LookupResponse{
-			UserID:   req.User,
-			User:     req.User,
-			Email:    req.User,
-			Password: "badadmin",
-		}
-	}
-
-	return
-}
-
 var (
-	runConfig = &RunConfig{}
+	runConfig = &RunConfig{
+		Config: auth.Config{
+			AuthType: "basic",
+		},
+		Basic: basicauth.Config{
+			StaticUsername: "badadmin",
+			StaticPassword: "badadmin",
+		},
+	}
 
 	Run = &cli.Command{
 		Name:      "run",
-		Usage:     "Runs the varys server process",
-		UsageText: "varys run [OPTIONS]",
+		Usage:     "Runs the varys server process.",
 		Flags:     flagset.ExtractPrefix("varys", runConfig),
+		ArgsUsage: " ",
 		Action: func(ctx *cli.Context) error {
 			log := zaputil.Extract(ctx.Context)
 
@@ -105,24 +92,22 @@ var (
 				return err
 			}
 
+			log.Info("configuring auth", zap.String("kind", runConfig.AuthType))
 			var authFn auth.HandlerFunc
 
 			switch runConfig.AuthType {
 			case "basic":
-				log.Info("configuring basic auth")
 				authFn, err = basicauth.Handler(ctx.Context, runConfig.Basic)
 				if err != nil {
 					return err
 				}
 			case "oidc":
-				log.Info("configuring oidc auth")
 				return fmt.Errorf("oidc not yet supported")
 			default:
-				log.Info("configuring default auth")
-				runConfig.AuthType = "default"
-				authFn = basicauth.Basic(&admin{log})
+				return fmt.Errorf("unsupported auth type: %s", runConfig.AuthType)
 			}
 
+			log.Info("opening database")
 			encryptionKey := sha256.Sum256([]byte(runConfig.Database.Encryption.Key))
 
 			opts := badger.DefaultOptions(runConfig.Database.Path)
@@ -137,13 +122,36 @@ var (
 			}
 			defer db.Close()
 
+			adapter := engine.NewCasbinAdapter(db)
+			model, err := model.NewModelFromString(engine.Model)
+			if err != nil {
+				return err
+			}
+
+			enforcer, _ := casbin.NewEnforcer()
+			enforcer.SetModel(model)
+			enforcer.SetAdapter(adapter)
+
+			enforcer.EnableAutoSave(true)
+			enforcer.EnableAutoBuildRoleLinks(true)
+
+			err = enforcer.LoadPolicy()
+			if err != nil {
+				return err
+			}
+
+			err = engine.EnsurePolicy(enforcer, engine.DefaultPolicy)
+			if err != nil {
+				return err
+			}
+
+			log.Info("setting up api")
+			api := engine.NewAPI(db, enforcer, runConfig.Credential.RootKey)
+
 			router := mux.NewRouter()
 			router.StrictSlash(true)
 			router.SkipClean(true)
 			router.Use(mux.CORSMethodMiddleware(router))
-
-			// enforcer currently null due to compatibility issues with casbin adapters
-			api := engine.NewAPI(db, nil, runConfig.Credential.RootKey)
 
 			apiRouter := router.PathPrefix("/api/").Subrouter()
 			apiRouter.Use(func(handler http.Handler) http.Handler {
@@ -157,7 +165,6 @@ var (
 
 			credentials := apiRouter.PathPrefix("/v1/credentials").Subrouter()
 			credentials.HandleFunc("/{kind}/{name}", api.ListCredentials).Methods(http.MethodGet)
-			credentials.HandleFunc("/{kind}/{name}/self", api.GetCurrentUserCredentials).Methods(http.MethodGet)
 
 			services := apiRouter.PathPrefix("/v1/services").Subrouter()
 			services.HandleFunc("", api.ListServices).Methods(http.MethodGet)
@@ -165,6 +172,10 @@ var (
 			services.HandleFunc("/{kind}/{name}", api.GetService).Methods(http.MethodGet)
 			services.HandleFunc("/{kind}/{name}", api.UpdateService).Methods(http.MethodPut)
 			services.HandleFunc("/{kind}/{name}", api.DeleteService).Methods(http.MethodDelete)
+			services.HandleFunc("/{kind}/{name}/credentials", api.GetServiceCredentials).Methods(http.MethodGet)
+			services.HandleFunc("/{kind}/{name}/grants", api.ListGrants).Methods(http.MethodGet)
+			services.HandleFunc("/{kind}/{name}/grants", api.PutGrant).Methods(http.MethodPut)
+			services.HandleFunc("/{kind}/{name}/grants", api.DeleteGrant).Methods(http.MethodDelete)
 
 			users := apiRouter.PathPrefix("/v1/users").Subrouter()
 			users.HandleFunc("", api.ListUsers).Methods(http.MethodGet)
@@ -178,6 +189,7 @@ var (
 				}
 
 				if tlsConfig != nil {
+					log.Info("setting up tls")
 					listener = tls.NewListener(listener, tlsConfig)
 				}
 

@@ -1,10 +1,25 @@
+// Copyright (C) 2022  Mya Pitzeruse
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+
 package engine
 
 import (
 	"bytes"
 	"context"
 	"fmt"
-	"log"
 	"reflect"
 
 	"github.com/dgraph-io/badger/v3"
@@ -42,11 +57,14 @@ func (txn *Txn) CommitOrDiscard(err *error) {
 	*err = txn.txn.Commit()
 }
 
+// Store provides common CRUD operations on top of badgerdb. Operations are scoped to a prefix, allowing multiple
+// resources to be managed by the same database.
 type Store struct {
 	db     *badger.DB
 	prefix string
 }
 
+// List objects within the store.
 func (store *Store) List(ctx context.Context, base interface{}) (results []interface{}, err error) {
 	txn := store.db.NewTransaction(false)
 	defer txn.Discard()
@@ -58,12 +76,9 @@ func (store *Store) List(ctx context.Context, base interface{}) (results []inter
 	iter := txn.NewIterator(opts)
 	defer iter.Close()
 
-	iter.Seek(opts.Prefix)
-
-	for ; iter.ValidForPrefix(opts.Prefix); iter.Next() {
+	for iter.Seek(opts.Prefix); iter.ValidForPrefix(opts.Prefix); iter.Next() {
 		err = iter.Item().Value(func(val []byte) error {
 			v := reflect.New(reflect.TypeOf(base)).Interface()
-			log.Printf("%#v", v)
 
 			err = encoding.MsgPack.Decoder(bytes.NewReader(val)).Decode(&v)
 			if err != nil {
@@ -82,6 +97,7 @@ func (store *Store) List(ctx context.Context, base interface{}) (results []inter
 	return results, nil
 }
 
+// Put an object in the store.
 func (store *Store) Put(ctx context.Context, kind, name string, v interface{}) (err error) {
 	key := []byte(fmt.Sprintf("%s/%s/%s", store.prefix, kind, name))
 	value := bytes.NewBuffer(nil)
@@ -100,6 +116,7 @@ func (store *Store) Put(ctx context.Context, kind, name string, v interface{}) (
 	return txn.txn.Set(key, value.Bytes())
 }
 
+// Get an object from the store.
 func (store *Store) Get(ctx context.Context, kind, name string, v interface{}) (err error) {
 	key := []byte(fmt.Sprintf("%s/%s/%s", store.prefix, kind, name))
 
@@ -119,6 +136,7 @@ func (store *Store) Get(ctx context.Context, kind, name string, v interface{}) (
 	})
 }
 
+// Delete an object from the store.
 func (store *Store) Delete(ctx context.Context, kind, name string) (err error) {
 	key := []byte(fmt.Sprintf("%s/%s/%s", store.prefix, kind, name))
 
