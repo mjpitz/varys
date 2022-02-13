@@ -24,13 +24,14 @@ type grantRequest struct {
 }
 
 var (
-	createRequest = engine.CreateServiceRequest{
+	createServiceRequest = engine.CreateServiceRequest{
 		Templates: engine.Templates{
 			UserTemplate:     "basic",
 			PasswordTemplate: "max",
 		},
 	}
-	updateRequest = engine.UpdateServiceRequest{}
+
+	updateServiceRequest = engine.UpdateServiceRequest{}
 
 	updateGrantRequest = grantRequest{}
 
@@ -108,20 +109,20 @@ var (
 				Name:      "create",
 				Usage:     "Create a new service in varys.",
 				ArgsUsage: "<kind> <name>",
-				Flags:     flagset.ExtractPrefix("varys_create_service", &createRequest),
+				Flags:     flagset.ExtractPrefix("varys_create_service", &createServiceRequest),
 				Action: func(ctx *cli.Context) error {
 					args := ctx.Args()
 
-					createRequest.Kind = args.Get(0)
-					createRequest.Name = args.Get(1)
+					createServiceRequest.Kind = args.Get(0)
+					createServiceRequest.Name = args.Get(1)
 
-					if createRequest.Kind == "" || createRequest.Name == "" {
+					if createServiceRequest.Kind == "" || createServiceRequest.Name == "" {
 						return fmt.Errorf("expecting two arguments: <kind> <name>")
 					}
 
 					api := client.Extract(ctx.Context)
 
-					return api.Services().Create(ctx.Context, createRequest)
+					return api.Services().Create(ctx.Context, createServiceRequest)
 				},
 			},
 			{
@@ -320,7 +321,7 @@ var (
 				Name:      "update",
 				Usage:     "Update a service in varys.",
 				ArgsUsage: "<kind> <name>",
-				Flags:     flagset.ExtractPrefix("varys_update_service", &updateRequest),
+				Flags:     flagset.ExtractPrefix("varys_update_service", &updateServiceRequest),
 				Action: func(ctx *cli.Context) error {
 					args := ctx.Args()
 
@@ -333,7 +334,7 @@ var (
 
 					api := client.Extract(ctx.Context)
 
-					return api.Services().Update(ctx.Context, kind, name, updateRequest)
+					return api.Services().Update(ctx.Context, kind, name, updateServiceRequest)
 				},
 			},
 		},

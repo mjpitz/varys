@@ -59,8 +59,8 @@ func ensure(enforcer *casbin.Enforcer, ptype string, rules [][]string) (err erro
 // EnsurePolicy parses the provided policy (in csv format) and adds the named line to the enforcer. This is useful for
 // using a non-file-adapter backends and loading them with a default policy.
 func EnsurePolicy(enforcer *casbin.Enforcer, policy string) error {
-	batchKind := ""
-	batch := make([][]string, 0)
+	ptype := ""
+	rules := make([][]string, 0)
 
 	lines := strings.Split(policy, "\n")
 	for _, line := range lines {
@@ -83,20 +83,33 @@ func EnsurePolicy(enforcer *casbin.Enforcer, policy string) error {
 			continue
 		}
 
-		if rule[0] != batchKind {
-			err := ensure(enforcer, batchKind, batch)
+		if rule[0] != ptype {
+			err := ensure(enforcer, ptype, rules)
 			if err != nil {
 				return err
 			}
 
-			batch = make([][]string, 0)
+			rules = make([][]string, 0)
 		}
 
-		batchKind = rule[0]
-		batch = append(batch, rule[1:])
+		ptype = rule[0]
+		rule = rule[1:]
+
+		var existing bool
+
+		switch v := ptype[:1]; v {
+		case "p":
+			existing = enforcer.HasNamedPolicy(ptype, rule)
+		case "g":
+			existing = enforcer.HasNamedGroupingPolicy(ptype, rule)
+		}
+
+		if !existing {
+			rules = append(rules, rule)
+		}
 	}
 
-	return ensure(enforcer, batchKind, batch)
+	return ensure(enforcer, ptype, rules)
 }
 
 // NewCasbinAdapter returns an Adapter that can be used by the casbin system to assess policy.

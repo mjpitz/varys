@@ -75,3 +75,31 @@ func (api *API) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "", http.StatusInternalServerError)
 	}
 }
+
+type UpdateUserRequest struct {
+	RotateService Service `json:"rotate_service"`
+}
+
+func (api *API) UpdateCurrentUser(w http.ResponseWriter, r *http.Request) {
+	req := UpdateUserRequest{}
+
+	err := encoding.JSON.Decoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "", http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
+	log := zaputil.Extract(ctx)
+	user := extractUser(ctx)
+
+	if req.RotateService.Kind != "" && req.RotateService.Name != "" {
+		user.SiteCounters[req.RotateService.K()]++
+	}
+
+	err = api.users.Put(ctx, user.Kind, user.ID, user)
+	if err != nil {
+		log.Error("failed to update user", zap.Error(err))
+		http.Error(w, "", http.StatusBadRequest)
+	}
+}

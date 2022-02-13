@@ -27,11 +27,11 @@ docker: .docker
 docker/release:
 	docker buildx build . \
 		--platform linux/amd64,linux/arm64 \
-		--label "org.opencontainers.image.source=https://github.com/mjpitz/{{ .Name }}" \
+		--label "org.opencontainers.image.source=https://github.com/mjpitz/varys" \
 		--label "org.opencontainers.image.version=$(VERSION)" \
-		--label "org.opencontainers.image.licenses={{ .License }}" \
-		--label "org.opencontainers.image.title={{ .Name }}" \
-		--label "org.opencontainers.image.description=" \
+		--label "org.opencontainers.image.licenses=AGPL-3.0" \
+		--label "org.opencontainers.image.title=varys" \
+		--label "org.opencontainers.image.description=A derivation-based secret engine and privileged access management system" \
 		--tag $(SKAFFOLD_DEFAULT_REPO)/varys:latest \
 		--tag $(SKAFFOLD_DEFAULT_REPO)/varys:$(VERSION) \
 		--file ./cmd/varys/Dockerfile \

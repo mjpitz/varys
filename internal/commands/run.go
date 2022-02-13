@@ -46,7 +46,7 @@ import (
 
 type EncryptionConfig struct {
 	Key         string        `json:"key"          usage:"specify the root encryption key used to encrypt the database"`
-	KeyDuration time.Duration `json:"key_duration" usage:"how long a derived encryption key is good for" default:"120h"`
+	KeyDuration time.Duration `json:"key_duration" usage:"how long a derived encryption key is good for" default:"120h" hidden:"true"`
 }
 
 type DatabaseConfig struct {
@@ -76,6 +76,7 @@ var (
 		Basic: basicauth.Config{
 			StaticUsername: "badadmin",
 			StaticPassword: "badadmin",
+			StaticGroups:   cli.NewStringSlice(),
 		},
 	}
 
@@ -86,6 +87,10 @@ var (
 		ArgsUsage: " ",
 		Action: func(ctx *cli.Context) error {
 			log := zaputil.Extract(ctx.Context)
+
+			if v := runConfig.Basic.StaticGroups.Value(); len(v) == 0 {
+				_ = runConfig.Basic.StaticGroups.Set("admin:varys")
+			}
 
 			tlsConfig, err := livetls.New(ctx.Context, runConfig.TLS)
 			if err != nil {
@@ -180,6 +185,7 @@ var (
 			users := apiRouter.PathPrefix("/v1/users").Subrouter()
 			users.HandleFunc("", api.ListUsers).Methods(http.MethodGet)
 			users.HandleFunc("/self", api.GetCurrentUser).Methods(http.MethodGet)
+			users.HandleFunc("/self", api.UpdateCurrentUser).Methods(http.MethodPut)
 
 			group, done := errgroup.WithContext(ctx.Context)
 			group.Go(func() error {

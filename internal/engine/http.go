@@ -74,9 +74,9 @@ func Middleware(handler http.Handler, api *API, authKind string) http.Handler {
 					return
 				}
 
-				_, err = api.enforcer.AddRolesForUser(user.K(), []string{
-					"read:varys",
-				})
+				roles := append([]string{"read:varys"}, userInfo.Groups...)
+
+				_, err = api.enforcer.AddRolesForUser(user.K(), roles)
 				if err != nil {
 					log.Error("failed to add default roles for user", zap.Error(err))
 				}

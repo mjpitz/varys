@@ -197,9 +197,23 @@ func (u *Users) List(ctx context.Context) ([]engine.User, error) {
 	return users, err
 }
 
-func (u *Users) Current(ctx context.Context) (auth.UserInfo, error) {
+func (u *Users) Current() *CurrentUser {
+	return &CurrentUser{
+		api: u.api,
+	}
+}
+
+type CurrentUser struct {
+	api *API
+}
+
+func (u *CurrentUser) Get(ctx context.Context) (auth.UserInfo, error) {
 	info := auth.UserInfo{}
 	err := u.api.Do(ctx, http.MethodGet, "/api/v1/users/self", nil, &info)
 
 	return info, err
+}
+
+func (u *CurrentUser) Update(ctx context.Context, update engine.UpdateUserRequest) error {
+	return u.api.Do(ctx, http.MethodPut, "/api/v1/users/self", update, nil)
 }
