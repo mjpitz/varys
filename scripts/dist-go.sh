@@ -24,7 +24,7 @@ go mod verify
 if [[ -z "${VERSION}" ]]; then
 	goreleaser --snapshot --skip-publish --rm-dist
 else
-	goreleaser
+	goreleaser --skip-publish --rm-dist
 fi
 
 rm -rf "$(pwd)/varys"
