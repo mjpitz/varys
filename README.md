@@ -34,6 +34,12 @@ For now, you'll need to install `varys` the old-fashion way.
 $ go install github.com/mjpitz/varys/cmd/varys@latest
 ```
 
+A container is also available. To run using docker: 
+
+```
+$ docker run ghcr.io/mjpitz/varys:latest
+```
+
 ## Resources
 
 - [Documentation](https://github.com/mjpitz/varys/wiki)
